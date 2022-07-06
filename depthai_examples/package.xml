@@ -33,6 +33,7 @@
   <depend>stereo_msgs</depend>
   <depend>vision_msgs</depend>
   <depend>foxglove_msgs</depend>
+  <depend>am_utils</depend>
 
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>depth_image_proc</exec_depend>
@@ -42,6 +43,7 @@
 
   <export>
     <nodelet condition="$ROS_VERSION == 1" plugin="${prefix}/nodelet_plugins.xml" />
+    <nodelet condition="$ROS_VERSION == 1" plugin="${prefix}/stereo_leveller_nodelet_plugins.xml" />
     <build_type condition="$ROS_VERSION == 1">catkin</build_type>
     <build_type condition="$ROS_VERSION == 2">ament_cmake</build_type>
   </export>

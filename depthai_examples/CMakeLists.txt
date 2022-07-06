@@ -62,6 +62,7 @@ if ( ament_cmake_FOUND )
     stereo_msgs
     std_msgs
     vision_msgs
+    am_utils
   )
 
   include_directories(
@@ -189,6 +190,16 @@ elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
     depthai::core
     opencv_imgproc
     opencv_highgui
+  )
+  
+  add_library(stereo_leveller_nodelet ros1_src/stereo_leveller_nodelet.cpp)
+
+  add_dependencies(stereo_leveller_nodelet ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS} 
+  )
+
+  target_link_libraries(stereo_leveller_nodelet
+    ${catkin_LIBRARIES}
   )
 
   dai_add_node(crop_control_service ros1_src/crop_control_service.cpp)

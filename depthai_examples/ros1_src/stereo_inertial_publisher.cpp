@@ -21,6 +21,9 @@
 #include "depthai/depthai.hpp"
 
 std::vector<std::string> usbStrings = {"UNKNOWN", "LOW", "FULL", "HIGH", "SUPER", "SUPER_PLUS"};
+sensor_msgs::Imu latest_imu_;
+std::string mxId;
+
 
 std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
                                                    bool enableSpatialDetection,
@@ -180,11 +183,26 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     return std::make_tuple(pipeline, width, height);
 }
 
+void imuCB(const sensor_msgs::Imu::ConstPtr &imu_msg)
+{
+	latest_imu_ = *imu_msg;
+}
+
+void imuTimerCB(const ros::TimerEvent &event)
+{
+	if((ros::Time::now() - latest_imu_.header.stamp).toSec() > 5.0)
+	{
+		ROS_ERROR("No Imu message is received from %s device", mxId.c_str());
+		ros::shutdown();
+		exit(-1);
+	}
+}
+
 int main(int argc, char** argv) {
     ros::init(argc, argv, "stereo_inertial_node");
     ros::NodeHandle pnh("~");
 
-    std::string tfPrefix, mode, mxId, resourceBaseFolder, nnPath;
+    std::string tfPrefix, mode, resourceBaseFolder, nnPath;
     std::string monoResolution = "720p";
     int badParams = 0, stereo_fps, confidence, LRchecktresh, imuModeParam;
     bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned;
@@ -342,6 +360,11 @@ int main(int argc, char** argv) {
         "imu");
 
     ImuPublish.addPublisherCallback();
+
+    ros::Subscriber imu_sub = pnh.subscribe<sensor_msgs::Imu>("/stereo_inertial_publisher_"+mxId+"/imu",1,imuCB);
+
+    ros::Timer imu_check_timer_ = pnh.createTimer(ros::Duration(5.0), imuTimerCB);
+
     int colorWidth = 1280, colorHeight = 720;
     if(monoHeight < 720) {
         colorWidth = 640;
@@ -482,6 +505,9 @@ int main(int argc, char** argv) {
             ros::spin();
         }
     }
+
+
+
 
     return 0;
 }
