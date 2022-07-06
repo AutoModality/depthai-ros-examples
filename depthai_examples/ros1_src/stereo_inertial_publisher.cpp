@@ -94,8 +94,9 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
 
     // Imu
     imu->enableIMUSensor(dai::IMUSensor::ACCELEROMETER_RAW, 500);
+    imu->enableIMUSensor(dai::IMUSensor::ROTATION_VECTOR, 400);
     imu->enableIMUSensor(dai::IMUSensor::GYROSCOPE_RAW, 400);
-    imu->setBatchReportThreshold(5);
+    imu->setBatchReportThreshold(2);
     imu->setMaxBatchReports(20);  // Get one message only for now.
 
     if(depth_aligned) {
