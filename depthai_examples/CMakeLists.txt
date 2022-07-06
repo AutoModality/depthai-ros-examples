@@ -11,6 +11,13 @@ if(POLICY CMP0057)
     cmake_policy(SET CMP0057 NEW)
 endif()
 
+find_package(PCL REQUIRED)
+
+if(PCL_FOUND)
+	link_directories(${PCL_LIBRARY_DIRS})
+	add_definitions(${PCL_DEFINITIONS})
+endif()
+
 set(_opencv_version 4)
 find_package(OpenCV 4 QUIET COMPONENTS imgproc highgui)
 if(NOT OpenCV_FOUND)
@@ -51,7 +58,6 @@ if ( ament_cmake_FOUND )
   find_package(stereo_msgs REQUIRED)
   find_package(std_msgs REQUIRED)
   find_package(vision_msgs REQUIRED)
-
   set(dependencies
     camera_info_manager
     cv_bridge
@@ -68,6 +74,7 @@ if ( ament_cmake_FOUND )
   include_directories(
     include
     ${ament_INCLUDE_DIRS}
+    ${PCL_INCLUDE_DIRS}
   )
 
 
@@ -144,6 +151,7 @@ elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
     depthai_bridge
     message_filters
     nodelet
+    am_utils
   )
   find_package(depthai CONFIG REQUIRED)
 
@@ -200,6 +208,7 @@ elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
 
   target_link_libraries(stereo_leveller_nodelet
     ${catkin_LIBRARIES}
+    ${PCL_LIBRARIES}
   )
 
   dai_add_node(crop_control_service ros1_src/crop_control_service.cpp)
