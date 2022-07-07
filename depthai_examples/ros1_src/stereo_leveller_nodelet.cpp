@@ -31,7 +31,7 @@ public:
 
 		pcl_pub_ = pnh.advertise<pcl::PointCloud<pcl::PointXYZ>>("/sensor/"+mxId_+"/pcl",1);
 
-		pc_sub_ = pnh.subscribe<sensor_msgs::PointCloud2>("/stereo_inertial_publisher_"+ mxId_ +"/stereo/points",1,
+		pc_sub_ = pnh.subscribe<sensor_msgs::PointCloud2>("/stereo_inertial_publisher_"+ mxId_ +"/stereo/points_filtered",1,
 				&StereoLevellerNodelet::pc2CB, this);
 
 	}
@@ -59,11 +59,42 @@ private:
 
 		pcl::fromROSMsg(*cloud, pcl_cloud);
 
+		sensor_msgs::Imu imu_msg;
+		imu_class_->getImu(imu_msg, cloud->header.stamp);
+		double roll = 0.0, pitch = 0.0, yaw = 0.0;
+
+		tf::Quaternion q_sensor_FLU(-0.5, 0.5, -0.5, 0.5);
+
+		tf::Quaternion q_imu;
+		am::Rotate::getRPY(imu_msg.orientation, roll, pitch, yaw);
+		q_imu.setRPY(roll, pitch, 0.0);
+
+
+		tf::Quaternion q_final = q_imu*q_sensor_FLU;
+		q_final.normalize();
+		geometry_msgs::Quaternion q;
+		q.x = q_final.x();
+		q.y = q_final.y();
+		q.z = q_final.z();
+		q.w = q_final.w();
+
+		//ROS_INFO("r: %f, p: %f, y: %f", roll, pitch, yaw);
+
 		for(pcl::PointXYZ &p : pcl_cloud.points)
 		{
-			imu_class_->transform(p.x, p.y, p.z, cloud->header.stamp);
+			double x = p.x;
+			double y = p.y;
+			double z = p.z;
+			//ROS_INFO("before: x: %f, y: %f, z: %f", x,y,z);
+			am::Rotate::rotate(x, y, z, q);
+			//ROS_INFO("after: x: %f, y: %f, z: %f", x,y,z);
+			p.x = x;
+			p.y = y;
+			p.z = z;
+
 		}
 
+		pcl_cloud.header.frame_id = "sensor_Level_FLU";
 		pcl_pub_.publish(pcl_cloud);
 	}
 };
