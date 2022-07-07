@@ -61,13 +61,19 @@ private:
 
 		sensor_msgs::Imu imu_msg;
 		imu_class_->getImu(imu_msg, cloud->header.stamp);
-		double roll = 0.0, pitch = 0.0, yaw = 0.0;
+		double yaw = 0.0;
 
 		tf::Quaternion q_sensor_FLU(-0.5, 0.5, -0.5, 0.5);
 
 		tf::Quaternion q_imu;
-		am::Rotate::getRPY(imu_msg.orientation, roll, pitch, yaw);
-		q_imu.setRPY(roll, pitch, 0.0);
+		yaw = am::Rotate::getYaw(imu_msg.orientation);
+
+
+		q_imu = tf::Quaternion(imu_msg.orientation.x, imu_msg.orientation.y, imu_msg.orientation.z, imu_msg.orientation.w);
+		tf::Quaternion q_imu_anti_yaw;
+		q_imu_anti_yaw.setRPY(0.0, 0.0, -yaw);
+		q_imu = q_imu*q_imu_anti_yaw;
+		//q_imu.setRPY(roll, pitch, 0.0);
 
 
 		tf::Quaternion q_final = q_imu*q_sensor_FLU;
