@@ -61,22 +61,19 @@ private:
 
 		sensor_msgs::Imu imu_msg;
 		imu_class_->getImu(imu_msg, cloud->header.stamp);
-		double yaw = 0.0;
+		double roll = 0.0, pitch = 0.0, yaw = 0.0;
 
 		tf::Quaternion q_sensor_FLU(-0.5, 0.5, -0.5, 0.5);
 
 		tf::Quaternion q_imu;
-		yaw = am::Rotate::getYaw(imu_msg.orientation);
+		//yaw = am::Rotate::getYaw(imu_msg.orientation);
+		am::Rotate::getRPY(imu_msg.orientation, roll, pitch, yaw);
+		//ROS_INFO("r: %f, p: %f, y: %f", roll, pitch, yaw);
+		//WHY ROLL is not reversed???????
+		q_imu.setEuler(0.0, -pitch, roll);
 
 
-		q_imu = tf::Quaternion(imu_msg.orientation.x, imu_msg.orientation.y, imu_msg.orientation.z, imu_msg.orientation.w);
-		tf::Quaternion q_imu_anti_yaw;
-		q_imu_anti_yaw.setRPY(0.0, 0.0, -yaw);
-		q_imu = q_imu*q_imu_anti_yaw;
-		//q_imu.setRPY(roll, pitch, 0.0);
-
-
-		tf::Quaternion q_final = q_imu*q_sensor_FLU;
+		tf::Quaternion q_final = q_sensor_FLU*q_imu;
 		q_final.normalize();
 		geometry_msgs::Quaternion q;
 		q.x = q_final.x();
@@ -84,7 +81,7 @@ private:
 		q.z = q_final.z();
 		q.w = q_final.w();
 
-		//ROS_INFO("r: %f, p: %f, y: %f", roll, pitch, yaw);
+
 
 		for(pcl::PointXYZ &p : pcl_cloud.points)
 		{
