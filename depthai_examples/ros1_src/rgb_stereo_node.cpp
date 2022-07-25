@@ -117,7 +117,7 @@ int main(int argc, char** argv){
     std::string color_uri = camera_param_uri + "/" + "color.yaml";
 
 
-    dai::rosBridge::ImageConverter depthConverter(tfPrefix + "_right_camera_optical_frame", true);
+    dai::rosBridge::ImageConverter depthConverter(tfPrefix + "_right_camera_optical_frame", true, true);
     auto rgbCameraInfo = depthConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1280, 720); 
 
     dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(stereoQueue,

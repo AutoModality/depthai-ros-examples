@@ -135,10 +135,10 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
             spatialDetectionNetwork->setDepthUpperThreshold(10000);
 
             // yolo specific parameters
-            spatialDetectionNetwork->setNumClasses(80);
+            spatialDetectionNetwork->setNumClasses(1);
             spatialDetectionNetwork->setCoordinateSize(4);
             spatialDetectionNetwork->setAnchors({10, 14, 23, 27, 37, 58, 81, 82, 135, 169, 344, 319});
-            spatialDetectionNetwork->setAnchorMasks({{"side13", {3, 4, 5}}, {"side26", {1, 2, 3}}});
+            spatialDetectionNetwork->setAnchorMasks({{"side13", {3, 4, 5}}, {"side26", {0, 1, 2}}});
             spatialDetectionNetwork->setIouThreshold(0.5f);
 
             // Link plugins CAM -> NN -> XLINK
