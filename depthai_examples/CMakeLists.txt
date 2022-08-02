@@ -148,6 +148,7 @@ elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
     message_filters
     nodelet
     am_utils
+    am_world
   )
   find_package(depthai CONFIG REQUIRED)
 
@@ -196,12 +197,19 @@ elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
     opencv_highgui
   )
   
+  
+  add_executable(am_oak_d_localizer ros1_src/am_oak_d_localizer.cpp)
+  add_dependencies(am_oak_d_localizer 
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS} 
+  )
+  target_link_libraries(am_oak_d_localizer ${catkin_LIBRARIES} )
+  
+  
   add_library(stereo_leveller_nodelet ros1_src/stereo_leveller_nodelet.cpp)
-
   add_dependencies(stereo_leveller_nodelet ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS} 
   )
-
   target_link_libraries(stereo_leveller_nodelet
     ${catkin_LIBRARIES}
     ${PCL_LIBRARIES}
