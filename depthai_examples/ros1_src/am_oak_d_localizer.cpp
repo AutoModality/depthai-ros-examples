@@ -8,6 +8,7 @@
 #include <ros/ros.h>
 #include <world_lib/world_model.h>
 #include <vb_util_lib/transformer.h>
+#include <vb_util_lib/topics.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <brain_box_msgs/FeatureStatusList.h>
@@ -39,7 +40,11 @@ public:
 		}
 
 		//load the static transforms
-		loadTransforms();
+		if(!loadTransforms())
+		{
+			ROS_ERROR("%s: Failed to get all the transforms", ros::this_node::getName().c_str());
+			return;
+		}
 
 
 		odom_pub_ = nh.advertise<nav_msgs::Odometry>("/feature/odometry",1);
@@ -63,6 +68,8 @@ private:
 	std::string ai_topic_ = "";
 
 	std::string world_file_ = "";
+
+	std::string camera_tf_str_ = "";
 
 	double min_probability_ {0.75};
 
@@ -92,6 +99,8 @@ private:
 
 		ai_topic_ = "/stereo_inertial_publisher_" + mxId_ +"/color/yolov4_Spatial_detections";
 
+		camera_tf_str_ = "oak_d_"+mxId_;
+
 		ros::param::get(ros::this_node::getName()+"/class_names", class_names_);
 
 		ros::param::get(ros::this_node::getName()+"/feature_list", feature_list_);
@@ -107,9 +116,18 @@ private:
 		}
 	}
 
-	void loadTransforms()
+	//a function to load all the transforms
+	bool loadTransforms()
 	{
+		int counter = 20;
+		bool result = false;
+		while(counter >= 0 && !result)
+		{
+			result = transformer_.getTransform(body_FLU, camera_tf_str_, camera_to_body_tf_, 1.0, false);
+			counter--;
+		}
 
+		return result;
 	}
 
 	//ai boundingbox callback
@@ -133,6 +151,9 @@ private:
 			{
 				continue;
 			}
+
+			//todo: complete the function to produce appropriate feature odometry
+
 		}
 	}
 
