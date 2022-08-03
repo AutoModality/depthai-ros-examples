@@ -5,6 +5,7 @@
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/Imu.h>
 #include <stereo_msgs/DisparityImage.h>
+#include <vb_util_lib/utility.h>
 
 #include <cstdio>
 #include <functional>
@@ -190,11 +191,22 @@ void imuCB(const sensor_msgs::Imu::ConstPtr &imu_msg)
 
 void imuTimerCB(const ros::TimerEvent &event)
 {
+	static bool userIsInformed = false;
 	if((ros::Time::now() - latest_imu_.header.stamp).toSec() > 5.0)
 	{
+		userIsInformed = false;
 		ROS_ERROR("No Imu message is received from %s device", mxId.c_str());
 		ros::shutdown();
 		exit(-1);
+	}
+	else
+	{
+		if(!userIsInformed)
+		{
+			ROS_INFO(GREEN "OAK-D %s IS READY!!!!" COLOR_RESET, mxId.c_str());
+			userIsInformed = true;
+		}
+
 	}
 }
 
