@@ -8,7 +8,7 @@
 #include <ros/ros.h>
 #include <world_lib/world_model.h>
 #include <vb_util_lib/transformer.h>
-#include <vb_util_lib/topics.h>
+#include <vb_util_lib/frame_names.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <brain_box_msgs/FeatureStatusList.h>
