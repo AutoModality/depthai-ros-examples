@@ -71,6 +71,8 @@ private:
 
 	std::string camera_tf_str_ = "";
 
+	double min_allowed_distance_ = {1.0};
+
 	double min_probability_ {0.75};
 
 	double max_model_deviation_ {0.5};
@@ -108,6 +110,8 @@ private:
 		ros::param::get(ros::this_node::getName()+"/min_probability", min_probability_);
 
 		ros::param::get(ros::this_node::getName()+"/max_model_deviation", max_model_deviation_);
+
+		ros::param::get(ros::this_node::getName() + "/min_allowed_distance", min_allowed_distance_);
 
 
 		if(isFirstRun)
@@ -154,6 +158,21 @@ private:
 
 			//todo: complete the function to produce appropriate feature odometry
 
+			nav_msgs::Odometry odom;
+			odom.header = msg->header;
+			odom.header.frame_id = Asset_Frame;
+			odom.child_frame_id = getFeatureId(detection.position.z, -detection.position.x);
+			if(odom.child_frame_id == "")
+			{
+				continue;
+			}
+			odom.pose.pose.position.x = detection.position.z;
+			odom.pose.pose.position.y = -detection.position.x;
+
+			odom.pose.covariance[0] = 1.0;
+			odom.pose.covariance[1] = 1.0;
+
+			odom_pub_.publish(odom);
 		}
 	}
 
@@ -167,6 +186,59 @@ private:
 		}
 
 		return false;
+	}
+
+	std::string getFeatureId(double x, double y)
+	{
+		std::string result = "";
+
+		geometry_msgs::TransformStamped tbs_;
+		if(!transformer_.getTransform(Asset_Frame, body_FLU, tbs_, 1.0, false))
+		{
+			ROS_WARN("Could not find transform between Asset_Frame and body_FLU");
+			return result;
+		}
+		tbs_.transform.translation.x += x;
+		tbs_.transform.translation.y += y;
+
+
+		double min_distance = 1000.0;
+		int min_idx = -1;
+		for(int i = 0; i < wm_.features.surfaces.size(); i++)
+		{
+
+			std::string feature_id = wm_.features.surfaces[i].id;
+			if(feature_id.find("tree") == std::string::npos)
+			{
+				continue;
+			}
+
+			geometry_msgs::TransformStamped ts_;
+			if(!transformer_.getTransform(feature_id, body_FLU, ts_, 1.0, false))
+			{
+				ROS_WARN("Could not find transform between %s and body_FLU", feature_id.c_str());
+				continue;
+			}
+
+			//double tf_distance = sqrt(pow(ts_.transform.translation.x,2) + pow(ts_.transform.translation.y,2));
+
+			//double diff = abs(tf_distance - feature_dist);
+			double diff = sqrt(pow(tbs_.transform.translation.x - ts_.transform.translation.x,2) + pow(tbs_.transform.translation.y - ts_.transform.translation.y,2));
+
+			if(diff < min_distance && diff < min_allowed_distance_)
+			{
+				min_distance = diff;
+				min_idx = i;
+			}
+		}
+
+		if(min_idx >= 0)
+		{
+			result = wm_.features.surfaces[0].id;
+		}
+
+
+		return result;
 	}
 
 };
