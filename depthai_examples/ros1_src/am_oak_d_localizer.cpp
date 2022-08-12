@@ -163,6 +163,7 @@ private:
 	{
 		if(!enabled_)
 		{
+			ROS_INFO_THROTTLE(3.0, "%s is not enabled",ros::this_node::getName().c_str());
 			return;
 		}
 
@@ -175,8 +176,10 @@ private:
 			}
 
 			//use the zero index of the result?????
-			if(detection.results[0].score < min_probability_ || !isFound(feature_list_, class_names_[detection.results[0].id]))
+			bool result = isFound(feature_list_, class_names_[detection.results[0].id]);
+			if(detection.results[0].score < min_probability_ || !result)
 			{
+				ROS_WARN("SKIP model because of: %f, %s", detection.results[0].score, (result ? "FOUND" : "NOT FOUND"));
 				continue;
 			}
 
@@ -185,9 +188,10 @@ private:
 			nav_msgs::Odometry odom;
 			odom.header = msg->header;
 			odom.header.frame_id = Asset_Frame;
-			odom.child_frame_id = getFeatureId(detection.position.z, -detection.position.x);
+			odom.child_frame_id = getFeatureId(detection.position.x, detection.position.z);
 			if(odom.child_frame_id == "")
 			{
+				ROS_WARN("COULD NOT FIND A MATCH IN THE WORLD MODEL");
 				continue;
 			}
 			odom.pose.pose.position.x = detection.position.z;
@@ -222,9 +226,15 @@ private:
 			ROS_WARN("Could not find transform between Asset_Frame and body_FLU");
 			return result;
 		}
+		
+		ROS_INFO("Feature is at [%f, %f]", x, y);
+		
+		ROS_INFO("odom is at [%f, %f]", tbs_.transform.translation.x, tbs_.transform.translation.y);
+		
+
 		tbs_.transform.translation.x += x;
 		tbs_.transform.translation.y += y;
-
+		
 
 		double min_distance = 1000.0;
 		int min_idx = -1;
@@ -238,7 +248,7 @@ private:
 			}
 
 			geometry_msgs::TransformStamped ts_;
-			if(!transformer_.getTransform(feature_id, body_FLU, ts_, 1.0, false))
+			if(!transformer_.getTransform(Asset_Frame, feature_id, ts_, 1.0, false))
 			{
 				ROS_WARN("Could not find transform between %s and body_FLU", feature_id.c_str());
 				continue;
@@ -254,12 +264,18 @@ private:
 				min_distance = diff;
 				min_idx = i;
 			}
+
+			else
+			{
+				ROS_WARN("FEATURE %s IS DISMISSED:  diff = %f", feature_id.c_str(), diff);
+			}
 		}
 
 		if(min_idx >= 0)
 		{
 			result = wm_.features.surfaces[0].id;
 		}
+		
 
 
 		return result;
