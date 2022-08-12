@@ -49,6 +49,8 @@ public:
 
 		odom_pub_ = nh.advertise<nav_msgs::Odometry>("/feature/odometry",1);
 
+		fsl_sub_ = nh.subscribe<brain_box_msgs::FeatureStatusList>("/feature/search_ids", 1, &OAKD2DLocalizer::fsCB, this);
+
 		ai_sub_ = nh.subscribe<depthai_ros_msgs::SpatialDetectionArray>(ai_topic_, 1, &OAKD2DLocalizer::aiCB, this);
 
 	}
@@ -93,6 +95,28 @@ private:
 
 	bool enabled_ {false};
 
+	//feature status list
+	void fsCB(const brain_box_msgs::FeatureStatusList::ConstPtr &msg)
+	{
+		bool enable = false;
+
+		for (brain_box_msgs::FeatureStatus fs : msg->features)
+		{
+			if(fs.feature_id.find("path") != std::string::npos)
+			{
+				enable = true;
+				break;
+			}
+		}
+
+		if((enable && !enabled_) || (!enable && enabled_))
+		{
+			enabled_ = enable;
+		}
+
+	}
+
+	//get params
 	void getParams()
 	{
 		static bool isFirstRun = true;
