@@ -47,7 +47,7 @@ public:
 		}
 
 
-		odom_pub_ = nh.advertise<nav_msgs::Odometry>("/feature/odometry",1);
+		odom_pub_ = nh.advertise<nav_msgs::Odometry>("/debug/feature/odometry",1);
 
 		ai_sub_ = nh.subscribe<depthai_ros_msgs::SpatialDetectionArray>(ai_topic_, 1, &OAKD2DLocalizer::aiCB, this);
 
@@ -171,7 +171,7 @@ private:
 
 			odom.pose.covariance[0] = 1.0;
 			odom.pose.covariance[1] = 1.0;
-
+			
 			odom_pub_.publish(odom);
 		}
 	}
