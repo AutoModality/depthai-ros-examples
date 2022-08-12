@@ -121,7 +121,7 @@ private:
 	{
 		static bool isFirstRun = true;
 
-		ros::param::get("mxId", mxId_);
+		ros::param::get(ros::this_node::getName()+"/mxId", mxId_);
 
 		ai_topic_ = "/stereo_inertial_publisher_" + mxId_ +"/color/yolov4_Spatial_detections";
 
