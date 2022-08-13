@@ -46,7 +46,6 @@ public:
 			return;
 		}
 
-
 		odom_pub_ = nh.advertise<nav_msgs::Odometry>("/debug/feature/odometry",1);
 
 		fsl_sub_ = nh.subscribe<brain_box_msgs::FeatureStatusList>("/feature/search_ids", 1, &OAKD2DLocalizer::fsCB, this);
@@ -65,6 +64,8 @@ private:
 
 	ros::Subscriber fsl_sub_;
 
+	std::vector<std::string> classes_ {"tree_1", "tree_2", "tree_3", "tree_4"};
+
 	std::string mxId_ = "";
 
 	std::string ai_topic_ = "";
@@ -72,6 +73,8 @@ private:
 	std::string world_file_ = "";
 
 	std::string camera_tf_str_ = "";
+
+	std::string feature_id_ = "";
 
 	double min_allowed_distance_ = {1.0};
 
@@ -104,6 +107,7 @@ private:
 		{
 			if(fs.feature_id.find("path") != std::string::npos)
 			{
+				feature_id_ = fs.feature_id;
 				enable = true;
 				break;
 			}
@@ -158,6 +162,22 @@ private:
 		return result;
 	}
 
+	void setClasses()
+	{
+		if(feature_id_ == "path_1")
+		{
+			classes_ = {"tree_5", "tree_6", "tree_7", "tree_8"};
+		}
+		else if(feature_id_ == "path_2")
+		{
+			classes_ = {"tree_1", "tree_2", "tree_3", "tree_4"};
+		}
+		else
+		{
+			classes_ = std::vector<std::string>();
+		}
+	}
+
 	//ai boundingbox callback
 	void aiCB (const depthai_ros_msgs::SpatialDetectionArray::ConstPtr &msg)
 	{
@@ -166,6 +186,9 @@ private:
 			ROS_INFO_THROTTLE(3.0, "%s is not enabled",ros::this_node::getName().c_str());
 			return;
 		}
+
+		//this is a hack for the ground vehicle demo
+		setClasses();
 
 		//iterating through the detection
 		for(const depthai_ros_msgs::SpatialDetection &detection : msg->detections)
@@ -188,7 +211,7 @@ private:
 			nav_msgs::Odometry odom;
 			odom.header = msg->header;
 			odom.header.frame_id = Asset_Frame;
-			odom.child_frame_id = getFeatureId(detection.position.x, detection.position.z);
+			odom.child_frame_id = getFeatureId();
 			if(odom.child_frame_id == "")
 			{
 				ROS_WARN("COULD NOT FIND A MATCH IN THE WORLD MODEL");
@@ -216,39 +239,22 @@ private:
 		return false;
 	}
 
-	std::string getFeatureId(double x, double y)
+	std::string getFeatureId()
 	{
 		std::string result = "";
-
-		geometry_msgs::TransformStamped tbs_;
-		if(!transformer_.getTransform(Asset_Frame, body_FLU, tbs_, 1.0, false))
-		{
-			ROS_WARN("Could not find transform between Asset_Frame and body_FLU");
-			return result;
-		}
-		
-		ROS_INFO("Feature is at [%f, %f]", x, y);
-		
-		ROS_INFO("odom is at [%f, %f]", tbs_.transform.translation.x, tbs_.transform.translation.y);
-		
-
-		tbs_.transform.translation.x += x;
-		tbs_.transform.translation.y += y;
-		
 
 		double min_distance = 1000.0;
 		int min_idx = -1;
 		for(int i = 0; i < wm_.features.surfaces.size(); i++)
 		{
-
 			std::string feature_id = wm_.features.surfaces[i].id;
-			if(feature_id.find("tree") == std::string::npos)
+			if(!isFound(classes_, feature_id))
 			{
 				continue;
 			}
 
 			geometry_msgs::TransformStamped ts_;
-			if(!transformer_.getTransform(Asset_Frame, feature_id, ts_, 1.0, false))
+			if(!transformer_.getTransform(feature_id, body_FLU, ts_, 1.0, false))
 			{
 				ROS_WARN("Could not find transform between %s and body_FLU", feature_id.c_str());
 				continue;
@@ -257,23 +263,18 @@ private:
 			//double tf_distance = sqrt(pow(ts_.transform.translation.x,2) + pow(ts_.transform.translation.y,2));
 
 			//double diff = abs(tf_distance - feature_dist);
-			double diff = sqrt(pow(tbs_.transform.translation.x - ts_.transform.translation.x,2) + pow(tbs_.transform.translation.y - ts_.transform.translation.y,2));
+			double diff = sqrt(pow(ts_.transform.translation.x,2) + pow(ts_.transform.translation.y,2));
 
-			if(diff < min_distance && diff < min_allowed_distance_)
+			if(diff < min_distance)
 			{
 				min_distance = diff;
 				min_idx = i;
-			}
-
-			else
-			{
-				ROS_WARN("FEATURE %s IS DISMISSED:  diff = %f", feature_id.c_str(), diff);
 			}
 		}
 
 		if(min_idx >= 0)
 		{
-			result = wm_.features.surfaces[0].id;
+			result = wm_.features.surfaces[min_idx].id;
 		}
 		
 
