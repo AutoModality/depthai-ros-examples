@@ -82,7 +82,7 @@ private:
 
 	double min_probability_ {0.75};
 
-	double max_model_deviation_ {0.5};
+	double max_model_deviation_ {1.0};
 
 	//the list of features to generate odometry for as key, and the minimum threshold for the key as value
 	std::vector<std::string> feature_list_;
@@ -244,17 +244,17 @@ private:
 					body_in_asset_tf_.transform.translation.y, am::Rotate::toDegree(heading_in_asset), p.x, p.y, diff);
 
 
-
+			if(diff > max_model_deviation_)
+			{
+				continue;
+			}
 
 			//todo: complete the function to produce appropriate feature odometry
 
 			nav_msgs::Odometry odom;
 			odom.header = msg->header;
 			odom.header.frame_id = Asset_Frame;
-
-
-
-			odom.child_frame_id = getFeatureId();
+			odom.child_frame_id = feature_id_;//getFeatureId();
 			if(odom.child_frame_id == "")
 			{
 				ROS_WARN("COULD NOT FIND A MATCH IN THE WORLD MODEL");
@@ -268,7 +268,7 @@ private:
 			odom.pose.covariance[0] = 1.0;
 			odom.pose.covariance[1] = 1.0;
 			
-			//odom_pub_.publish(odom);
+			odom_pub_.publish(odom);
 		}
 	}
 
