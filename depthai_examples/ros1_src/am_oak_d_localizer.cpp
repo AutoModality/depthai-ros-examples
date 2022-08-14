@@ -14,6 +14,7 @@
 #include <brain_box_msgs/FeatureStatusList.h>
 #include <depthai_ros_msgs/SpatialDetectionArray.h>
 #include <vb_util_lib/rotate.h>
+#include <vb_util_lib/utility.h>
 
 std::string NODE_NAME_ ("am_oak_d_localizer");
 
@@ -92,6 +93,8 @@ private:
 	//transformer object
 	am::Transformer transformer_;
 
+	geometry_msgs::TransformStamped feature_in_asset_tf_;
+
 	//worldmodel object
 	wld_mod::WorldModel wm_;
 
@@ -116,8 +119,18 @@ private:
 
 		if((enable && !enabled_) || (!enable && enabled_))
 		{
+
+			if(!transformer_.getTransform(Asset_Frame, feature_id_, feature_in_asset_tf_, 1.0, false))
+			{
+				ROS_INFO(RED "%s: CANNOT FIND TRANSFORM BETWEEN ASSET_FRAME AND %s" COLOR_RESET, ros::this_node::getName().c_str(), feature_id_.c_str());
+				return;
+			}
+
 			enabled_ = enable;
+			ROS_INFO(GREEN "%s: is %s" COLOR_RESET, ros::this_node::getName().c_str(), (enabled_ ? "ENABLED" : "DISABLED"));
 		}
+
+
 
 	}
 
@@ -225,8 +238,14 @@ private:
 			p.x = body_in_asset_tf_.transform.translation.x + detection.position.x;
 			p.y = body_in_asset_tf_.transform.translation.y + detection.position.z;
 
-			ROS_INFO("body_asset: [%f, %f, %f], p:[%f, %f]", body_in_asset_tf_.transform.translation.x,
-					body_in_asset_tf_.transform.translation.y, am::Rotate::toDegree(heading_in_asset), p.x, p.y);
+
+			double diff = sqrt(pow(p.x - feature_in_asset_tf_.transform.translation.x,2) + pow(p.y - feature_in_asset_tf_.transform.translation.y,2));
+
+
+			ROS_INFO("body_asset: [%f, %f, %f], p:[%f, %f], diff: %f", body_in_asset_tf_.transform.translation.x,
+					body_in_asset_tf_.transform.translation.y, am::Rotate::toDegree(heading_in_asset), p.x, p.y, diff);
+
+
 
 
 			//todo: complete the function to produce appropriate feature odometry
