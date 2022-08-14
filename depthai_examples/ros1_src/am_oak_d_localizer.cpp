@@ -46,7 +46,7 @@ public:
 			return;
 		}
 
-		odom_pub_ = nh.advertise<nav_msgs::Odometry>("/debug/feature/odometry",1);
+		odom_pub_ = nh.advertise<nav_msgs::Odometry>("/feature/odometry",1);
 
 		fsl_sub_ = nh.subscribe<brain_box_msgs::FeatureStatusList>("/feature/search_ids", 1, &OAKD2DLocalizer::fsCB, this);
 
@@ -105,7 +105,7 @@ private:
 
 		for (brain_box_msgs::FeatureStatus fs : msg->features)
 		{
-			if(fs.feature_id.find("path") != std::string::npos)
+			if(fs.feature_id.find("tree") != std::string::npos)
 			{
 				feature_id_ = fs.feature_id;
 				enable = true;
@@ -164,16 +164,17 @@ private:
 
 	void setClasses()
 	{
-		if(feature_id_ == "path_1")
-		{
-			classes_ = {"tree_5", "tree_6", "tree_7", "tree_8"};
-		}
-		else if(feature_id_ == "path_2")
+		if(feature_id_ == "path_1" || feature_id_ == "tree_1" || feature_id_ == "tree_2" ||
+		feature_id_ == "tree_3" || feature_id_ == "tree_4")
 		{
 			classes_ = {"tree_1", "tree_2", "tree_3", "tree_4"};
 		}
-		else
+		else if(feature_id_ == "path_2")
 		{
+			classes_ = {"tree_5", "tree_6", "tree_7", "tree_8"};
+		}
+		else
+		{	
 			classes_ = std::vector<std::string>();
 		}
 	}
@@ -187,8 +188,10 @@ private:
 			return;
 		}
 
+
+
 		//this is a hack for the ground vehicle demo
-		setClasses();
+		//setClasses();
 
 		//iterating through the detection
 		for(const depthai_ros_msgs::SpatialDetection &detection : msg->detections)
@@ -223,7 +226,7 @@ private:
 			odom.pose.covariance[0] = 1.0;
 			odom.pose.covariance[1] = 1.0;
 			
-			odom_pub_.publish(odom);
+			//odom_pub_.publish(odom);
 		}
 	}
 
@@ -248,10 +251,10 @@ private:
 		for(int i = 0; i < wm_.features.surfaces.size(); i++)
 		{
 			std::string feature_id = wm_.features.surfaces[i].id;
-			if(!isFound(classes_, feature_id))
-			{
-				continue;
-			}
+			//if(!isFound(classes_, feature_id))
+			//{
+				//continue;
+			//}
 
 			geometry_msgs::TransformStamped ts_;
 			if(!transformer_.getTransform(feature_id, body_FLU, ts_, 1.0, false))

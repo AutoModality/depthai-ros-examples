@@ -5,8 +5,9 @@
     <arg name="feature_list" default="[trashcan]"/>
     <node name="am_oak_d_localizer" pkg="depthai_examples" type="am_oak_d_localizer" output="screen" required="true">
         <param name="mxId"	value="$(arg mxId)"/>
-		<rosparam param="class_names" subst_value="True">$(arg class_names)</rosparam> 
-		<rosparam param="feature_list" subst_value="True">$(arg feature_list)</rosparam> 
+	<rosparam param="class_names" subst_value="True">$(arg class_names)</rosparam> 
+	<rosparam param="feature_list" subst_value="True">$(arg feature_list)</rosparam>
+	<param name="min_probability" value="0.7"/> 
     </node>            
 
 </launch>
