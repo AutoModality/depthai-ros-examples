@@ -13,6 +13,7 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <brain_box_msgs/FeatureStatusList.h>
 #include <depthai_ros_msgs/SpatialDetectionArray.h>
+#include <vb_util_lib/rotate.h>
 
 std::string NODE_NAME_ ("am_oak_d_localizer");
 
@@ -188,6 +189,15 @@ private:
 			return;
 		}
 
+		//get position of the vehicle in the asset_frame
+		geometry_msgs::TransformStamped body_in_asset_tf_;
+		if(!transformer_.getTransform(Asset_Frame, body_FLU, body_in_asset_tf_, 1.0, false))
+		{
+			ROS_WARN_THROTTLE(1.0, "%s: CANNOT FIND TRANSFORM BETWEEN ASSET_FRAME AND BODY_FLU", ros::this_node::getName().c_str());
+			return;
+		}
+
+		double heading_in_asset = am::Rotate::getYaw(body_in_asset_tf_.transform.rotation);
 
 
 		//this is a hack for the ground vehicle demo
@@ -209,11 +219,24 @@ private:
 				continue;
 			}
 
+
+
+			geometry_msgs::Point p;
+			p.x = body_in_asset_tf_.transform.translation.x + detection.position.z;
+			p.y = body_in_asset_tf_.transform.translation.y + detection.position.x;
+
+			ROS_INFO("body_asset: [%f, %f, %f], p:[%f, %f]", body_in_asset_tf_.transform.translation.x,
+					body_in_asset_tf_.transform.translation.y, am::Rotate::toDegree(heading_in_asset), p.x, p.y);
+
+
 			//todo: complete the function to produce appropriate feature odometry
 
 			nav_msgs::Odometry odom;
 			odom.header = msg->header;
 			odom.header.frame_id = Asset_Frame;
+
+
+
 			odom.child_frame_id = getFeatureId();
 			if(odom.child_frame_id == "")
 			{
@@ -222,6 +245,8 @@ private:
 			}
 			odom.pose.pose.position.x = detection.position.z;
 			odom.pose.pose.position.y = -detection.position.x;
+
+
 
 			odom.pose.covariance[0] = 1.0;
 			odom.pose.covariance[1] = 1.0;
