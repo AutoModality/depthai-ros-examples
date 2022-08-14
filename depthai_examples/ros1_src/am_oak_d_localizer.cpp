@@ -222,8 +222,8 @@ private:
 
 
 			geometry_msgs::Point p;
-			p.x = body_in_asset_tf_.transform.translation.x + detection.position.z;
-			p.y = body_in_asset_tf_.transform.translation.y + detection.position.x;
+			p.x = body_in_asset_tf_.transform.translation.x + detection.position.x;
+			p.y = body_in_asset_tf_.transform.translation.y + detection.position.z;
 
 			ROS_INFO("body_asset: [%f, %f, %f], p:[%f, %f]", body_in_asset_tf_.transform.translation.x,
 					body_in_asset_tf_.transform.translation.y, am::Rotate::toDegree(heading_in_asset), p.x, p.y);
