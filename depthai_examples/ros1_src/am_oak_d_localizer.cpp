@@ -260,8 +260,9 @@ private:
 				ROS_WARN("COULD NOT FIND A MATCH IN THE WORLD MODEL");
 				continue;
 			}
-			odom.pose.pose.position.x = detection.position.z;
-			odom.pose.pose.position.y = -detection.position.x;
+			odom.pose.pose.position.x = detection.position.x;
+			odom.pose.pose.position.y = -detection.position.z;
+			odom.pose.pose.orientation.w = 1.0;
 
 
 
