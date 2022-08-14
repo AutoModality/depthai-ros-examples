@@ -106,7 +106,7 @@ private:
 	void fsCB(const brain_box_msgs::FeatureStatusList::ConstPtr &msg)
 	{
 		bool enable = false;
-
+		feature_id_ = "";
 		for (brain_box_msgs::FeatureStatus fs : msg->features)
 		{
 			if(fs.feature_id.find("tree") != std::string::npos)
