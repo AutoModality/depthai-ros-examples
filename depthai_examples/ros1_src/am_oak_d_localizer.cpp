@@ -113,19 +113,17 @@ private:
 			{
 				feature_id_ = fs.feature_id;
 				enable = true;
+				if(!transformer_.getTransform(Asset_Frame, feature_id_, feature_in_asset_tf_, 1.0, false))
+				{
+					ROS_INFO(RED "%s: CANNOT FIND TRANSFORM BETWEEN ASSET_FRAME AND %s" COLOR_RESET, ros::this_node::getName().c_str(), feature_id_.c_str());
+					return;
+				}
 				break;
 			}
 		}
 
-		if((enable && !enabled_) || (!enable && enabled_))
+		if((enable && !enabled_) || !enable)
 		{
-
-			if(!transformer_.getTransform(Asset_Frame, feature_id_, feature_in_asset_tf_, 1.0, false))
-			{
-				ROS_INFO(RED "%s: CANNOT FIND TRANSFORM BETWEEN ASSET_FRAME AND %s" COLOR_RESET, ros::this_node::getName().c_str(), feature_id_.c_str());
-				return;
-			}
-
 			enabled_ = enable;
 			ROS_INFO(GREEN "%s: is %s" COLOR_RESET, ros::this_node::getName().c_str(), (enabled_ ? "ENABLED" : "DISABLED"));
 		}
