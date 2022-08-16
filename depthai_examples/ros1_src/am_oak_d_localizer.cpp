@@ -240,8 +240,8 @@ private:
 			double diff = sqrt(pow(p.x - feature_in_asset_tf_.transform.translation.x,2) + pow(p.y - feature_in_asset_tf_.transform.translation.y,2));
 
 
-			ROS_INFO("body_asset: [%f, %f, %f], p:[%f, %f], diff: %f", body_in_asset_tf_.transform.translation.x,
-					body_in_asset_tf_.transform.translation.y, am::Rotate::toDegree(heading_in_asset), p.x, p.y, diff);
+			//ROS_INFO("body_asset: [%f, %f, %f], p:[%f, %f], diff: %f", body_in_asset_tf_.transform.translation.x,
+			//		body_in_asset_tf_.transform.translation.y, am::Rotate::toDegree(heading_in_asset), p.x, p.y, diff);
 
 
 			if(diff > max_model_deviation_)

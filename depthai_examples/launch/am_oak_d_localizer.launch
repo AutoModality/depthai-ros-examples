@@ -8,6 +8,7 @@
 	<rosparam param="class_names" subst_value="True">$(arg class_names)</rosparam> 
 	<rosparam param="feature_list" subst_value="True">$(arg feature_list)</rosparam>
 	<param name="min_probability" value="0.7"/> 
+	<param name="max_model_deviation" value="1.5"/>
     </node>            
 
 </launch>
