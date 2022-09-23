@@ -203,8 +203,8 @@ void imuTimerCB(const ros::TimerEvent &event)
 	{
 		if(!userIsInformed)
 		{
-			ROS_INFO(GREEN "OAK-D %s IS READY!!!!" COLOR_RESET, mxId.c_str());
-			userIsInformed = true;
+			ROS_INFO_THROTTLE(2.0, GREEN "OAK-D %s IS READY!!!!" COLOR_RESET, mxId.c_str());
+			//userIsInformed = true;
 		}
 
 	}
